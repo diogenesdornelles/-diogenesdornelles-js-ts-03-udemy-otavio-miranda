@@ -1,2 +1,6 @@
-config.txt
+notes.txt
 node_modules
+.env
+*.jpg
+*.jpeg
+*.png

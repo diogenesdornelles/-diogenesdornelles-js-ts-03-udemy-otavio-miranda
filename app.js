@@ -1,2 +1,26 @@
-// eslint-disable-next-line
-// eslint-disable-line
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+import express from 'express';
+import homeRoutes from './src/routes/homeRoutes';
+
+class App {
+  constructor() {
+    this.app = express();
+    this.middlewares();
+    this.routes();
+  }
+
+  middlewares() {
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json());
+  }
+
+  routes() {
+    this.app.use('/', homeRoutes);
+  }
+}
+
+const app = new App();
+export default app.app;
