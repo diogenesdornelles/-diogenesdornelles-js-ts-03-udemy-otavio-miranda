@@ -2,7 +2,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('enderecos', {
-      endereco_id: {
+      id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
@@ -20,12 +20,12 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)'),

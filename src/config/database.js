@@ -11,10 +11,8 @@ module.exports = {
     timestamps: true,
     underscored: true,
     underscoredAll: true,
-    // eslint-disable-next-line quote-props
-    'createdAt': 'created_at',
-    // eslint-disable-next-line quote-props
-    'updatedAt': 'updated_at',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   },
   dialetOptions: {
     timezone: 'America/Sao_Paulo',

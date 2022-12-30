@@ -9,13 +9,14 @@
   },
   "devDependencies": {
     "eslint": "^8.30.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.24.1",
     "nodemon": "^2.0.20",
     "sequelize-cli": "^6.5.2",
     "sucrase": "^3.29.0"
   },
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mariadb": "^3.0.2",

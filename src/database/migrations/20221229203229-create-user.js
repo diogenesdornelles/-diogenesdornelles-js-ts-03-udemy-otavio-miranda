@@ -1,8 +1,8 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('alunos', {
-      aluno_id: {
+    await queryInterface.createTable('users', {
+      id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
@@ -12,36 +12,25 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      sobrenome: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
       email: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
       },
-      nascimento: {
-        type: Sequelize.DATE,
+      password_hash: {
+        type: Sequelize.STRING,
         allowNull: false,
-      },
-      endereco_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'enderecos',
-          key: 'endereco_id',
-        },
       },
       ativo: {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
       },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)'),
@@ -52,6 +41,6 @@ module.exports = {
     });
   },
   async down(queryInterface) {
-    await queryInterface.dropTable('alunos');
+    await queryInterface.dropTable('users');
   },
 };

@@ -1,6 +1,23 @@
+import factoryAluno from '../models/factoryAluno';
+import factoryEndereco from '../models/factoryEndereco';
+
 class HomeController {
-  index(req, res) {
-    res.json({ thatsOk: true });
+  async index(req, res) {
+    const Aluno = factoryAluno();
+    const Endereco = factoryEndereco();
+    const newEndereco = await Endereco.create({
+      municipio: 'Bento Gonçalves',
+      rua: 'Vitória',
+      numero: '135',
+    });
+    const newAluno = await Aluno.create({
+      nome: 'Diógenes',
+      sobrenome: 'Dornelles',
+      email: 'diogenes.dornelles@gmail.com',
+      nascimento: new Date('1985-03-17'),
+      endereco_id: 1,
+    });
+    res.status(200).json({ endereco: newEndereco, aluno: newAluno });
   }
 }
 
