@@ -2,9 +2,6 @@ import Sequelize, { Model } from 'sequelize';
 import bcrypt from 'bcrypt';
 import databaseConfig from '../config/database';
 
-// const salt = bcrypt.genSaltSync();
-//   const password = bcrypt.hashSync(req.body.password, salt);
-
 export default function factoryUser() {
   class User extends Model {}
   User.init({
@@ -34,6 +31,10 @@ export default function factoryUser() {
     password_hash: {
       type: Sequelize.STRING,
       defaultValue: '',
+    },
+    ativo: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true,
     },
     password: {
       type: Sequelize.VIRTUAL,

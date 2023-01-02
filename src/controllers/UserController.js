@@ -1,11 +1,13 @@
 import factoryUser from '../models/factoryUser';
 
 class UserController {
+  // create
   async create(req, res) {
     try {
       const User = factoryUser();
-      const newUser = await User.create(req.body);
-      return res.status(201).json(newUser);
+      const user = await User.create(req.body);
+      const { id, nome, email } = user;
+      return res.status(201).json( { id, nome, email} );
     } catch (err) {
       const { errors } = err;
       const er = {};
@@ -16,47 +18,65 @@ class UserController {
     }
   }
 
-  // index
+  // index // Should not be implemented
   async index(req, res) {
     try {
       const User = factoryUser();
-      const users = await User.findAll();
+      const users = await User.findAll( {
+        where: {
+          ativo: true
+        },
+        attributes: ['id', 'nome', 'email']
+      });
       return res.status(200).json(users);
     } catch (err) {
       return res.status(204).json(null);
     }
   }
 
-  // show
+  // show only himself
   async show(req, res) {
     try {
       const User = factoryUser();
-      const user = await User.findByPk(req.params.id);
-      return res.status(200).json(user);
+      const user = await User.findByPk(req.userId);
+      if (!user || !user.ativo) {
+        return res.status(400).json({
+          error: 'Usuário(a) não existe ou inativo(a)!',
+        });
+      }
+      const { id, nome, email } = user;
+      return res.status(200).json({ id, nome, email });
     } catch (err) {
       return res.status(204).json(null);
     }
   }
 
-  // update
+  // update himself
   async update(req, res) {
     try {
-      if (!req.params.id) {
-        return res.status(400).json({
-          errors: ['ID do usuário não enviado!'],
-        });
-      }
       const User = factoryUser();
-      const user = await User.findByPk(req.params.id);
-
-      if (!user) {
+      const user = await User.findByPk(req.userId);
+      if (!user || !user.ativo) {
         return res.status(400).json({
-          errors: ['Usuário não existe!'],
+          error: 'Usuário(a) não existe ou inativo(a)!',
         });
       }
-
-      const newData = await user.update(req.body);
-      return res.status(200).json(newData);
+      if ('ativo' in req.body) {
+        return res.status(400).json({
+          error: 'Use outro método para deletar usuário(a)!',
+        });
+      }
+      if ('created_at' in req.body || 'updated_at' in req.body) {
+        return res.status(400).json({
+          error: 'Não é possível atualizar este(s) campo(s)!',
+        });
+      }
+      const newUser = await user.update(req.body);
+      const { id, nome, email } = newUser;
+      if ('password' in req.body) {
+        return res.status(200).json({ id, nome, email, message: 'Senha alterada: é necessário refazer a autenticação!' });
+      }
+      return res.status(200).json({ id, nome, email });
     } catch (err) {
       const { errors } = err;
       const er = {};
@@ -67,24 +87,19 @@ class UserController {
     }
   }
 
+  // delete himself
   async delete(req, res) {
     try {
-      if (!req.params.id) {
-        return res.status(400).json({
-          errors: ['ID do usuário não enviado!'],
-        });
-      }
       const User = factoryUser();
-      const user = await User.findByPk(req.params.id);
-
-      if (!user) {
+      const user = await User.findByPk(req.userId);
+      if (!user || !user.ativo) {
         return res.status(400).json({
-          errors: ['Usuário não existe!'],
+          error: 'Usuário(a) não existe ou inativo(a)!',
         });
       }
-      await user.destroy();
+      const deletedUser = await user.update( { ativo: false }, { where: { id: req.userId }});
       return res.status(200).json({
-        success: `Usuário "${user.nome}" deletado!`,
+        success: `Usuário(a) ${deletedUser.nome} deletado(a)!`,
       });
     } catch (err) {
       const { errors } = err;

@@ -3,6 +3,8 @@ import factoryEndereco from '../models/factoryEndereco';
 
 class HomeController {
   async index(req, res) {
+    const {municipio, rua, numero, nome, sobrenome, email, nascimento, endereco_id} = req.body;
+
     const Aluno = factoryAluno();
     const Endereco = factoryEndereco();
     const newEndereco = await Endereco.create({

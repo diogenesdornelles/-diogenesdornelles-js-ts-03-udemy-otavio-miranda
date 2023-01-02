@@ -14,6 +14,10 @@ export default function factoryEndereco() {
     municipio: Sequelize.STRING,
     rua: Sequelize.STRING,
     numero: Sequelize.INTEGER,
+    ativo: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true,
+    },
   }, {
     sequelize: new Sequelize(databaseConfig),
     tableName: 'enderecos',
