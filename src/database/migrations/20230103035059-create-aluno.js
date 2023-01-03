@@ -1,24 +1,40 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('enderecos', {
+    await queryInterface.createTable('alunos', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      municipio: {
+      nome: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      rua: {
+      sobrenome: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      numero: {
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      nascimento: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      endereco_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: {
+            tableName: 'enderecos',
+            schema: 'escola'
+          },
+          key: 'id'
+        },
       },
       ativo: {
         type: Sequelize.BOOLEAN,
@@ -40,6 +56,6 @@ module.exports = {
     });
   },
   async down(queryInterface) {
-    await queryInterface.dropTable('enderecos');
+    await queryInterface.dropTable('alunos');
   },
 };

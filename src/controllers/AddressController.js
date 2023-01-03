@@ -3,29 +3,24 @@ import factoryEndereco from '../models/factoryEndereco';
 class AddressController {
   // user create adress
   async create(req, res) {
-    const { municipio, rua, numero } = req.body
-    const check = municipio && rua && numero;
-    if (!check) {
-      return res.status(400).json({
-        error: 'Fornecer dados completos (município, rua e número)!',
-      });
-    };
-    if (!Number.isInteger(numero/1)) {
-      return res.status(400).json({
-        error: 'Número deve ser do tipo inteiro!',
-      });
-    }
+    AddressController.validateAdress(req, res);
+    if(res.statusCode > 299) return;
     try {
       const Address = factoryEndereco();
       const address = await Address.create(req.body);
       const { municipio, rua, numero } = address;
-      return res.status(201).json( { municipio, rua, numero } );
+      return res.status(201).json( {success: { municipio, rua, numero }});
     } catch (err) {
-      return res.status(400).json(err);
+      const { errors } = err;
+      const er = {};
+      errors.forEach((error) => {
+        er[`Erro de ${error.path}`] = error.message;
+      });
+      return res.status(400).json(er);
     }
   }
 
-  // index - show all adresses
+  // index - user show all adresses
   async index(req, res) {
     try {
       const Address = factoryEndereco();
@@ -44,6 +39,7 @@ class AddressController {
 
   // show one adress
   async show(req, res) {
+    AddressController.validateId(req, res);
     const { id } = req.params;
     try {
       const Address = factoryEndereco();
@@ -63,19 +59,11 @@ class AddressController {
 
   // update an adress
   async update(req, res) {
+    AddressController.validateId(req, res);
+    if(res.statusCode > 299) return;
+    AddressController.validateAdress(req, res);
+    if(res.statusCode > 299) return;
     const { id } = req.params;
-    const { municipio, rua, numero } = req.body;
-    const check = municipio && rua && numero;
-    if (!check) {
-      return res.status(400).json({
-        error: 'Fornecer dados completos (município, rua e número)!',
-      });
-    };
-    if (!Number.isInteger(numero/1)) {
-      return res.status(400).json({
-        error: 'Número deve ser do tipo inteiro!',
-      });
-    }
     try {
       const Address = factoryEndereco();
       const address = await Address.findByPk(id);
@@ -96,7 +84,7 @@ class AddressController {
       }
       const newAddress = await address.update(req.body);
       const { municipio, rua, numero } = newAddress;
-      return res.status(200).json({ municipio, rua, numero });
+      return res.status(200).json({success: { municipio, rua, numero }});
     } catch (err) {
       console.log(err)
       const { errors } = err;
@@ -110,6 +98,8 @@ class AddressController {
 
   // delete an adress
   async delete(req, res) {
+    AddressController.validateId(req, res);
+    if(res.statusCode > 299) return;
     const { id } = req.params;
     try {
       const Address = factoryEndereco();
@@ -131,6 +121,35 @@ class AddressController {
       });
       return res.status(400).json(er);
     }
+  }
+}
+
+AddressController.validateAdress = (req, res) => {
+  const { municipio, rua, numero } = req.body;
+  const check = municipio && rua && numero;
+  if (!check) {
+    return res.status(400).json({
+      error: 'Fornecer dados completos (município, rua e número)!',
+    });
+  };
+  if (!Number.isInteger(numero)) {
+    return res.status(400).json({
+      error: 'Número deve ser do tipo inteiro!',
+    });
+  }
+}
+
+AddressController.validateId = (req, res) => {
+  const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        error: 'Id de endereço deve ser fornecido!',
+      });
+    }
+  if (!Number.isInteger(id/1)) {
+    return res.status(400).json({
+      error: 'Id deve ser do tipo inteiro!',
+    });
   }
 }
 

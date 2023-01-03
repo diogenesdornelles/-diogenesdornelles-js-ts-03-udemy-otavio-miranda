@@ -15,6 +15,7 @@ export default async(req, res, next) => {
     const { _id, _email, password } = data;
     req.userId = _id;
     req.userEmail = _email;
+    req.userPassword = password;
     const User = factoryUser();
     const user = await User.findOne( { where: {
       id: _id,
@@ -34,6 +35,7 @@ export default async(req, res, next) => {
       };
     return next();
   } catch (e) {
+    console.log(e)
     return res.status(401).json({ error: 'Token expirado ou inválido!'
     });
   };

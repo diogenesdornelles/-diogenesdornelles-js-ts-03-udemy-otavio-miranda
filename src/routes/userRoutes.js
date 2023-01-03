@@ -6,7 +6,7 @@ const router = new Router();
 
 router.post('/', UserController.create);
 
-router.get('/', loginIsRequired, UserController.show);
+router.get('/:id', loginIsRequired, UserController.show);
 
 router.get('/', loginIsRequired, UserController.index);
 

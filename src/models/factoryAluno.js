@@ -2,19 +2,62 @@ import Sequelize, { Model } from 'sequelize';
 import databaseConfig from '../config/database';
 
 export default function factoryAluno() {
-  class Aluno extends Model {
-    static associate(models) {
-      Aluno.hasMany(models.Endereco, {
-        foreignKey: 'endereco_id',
-      });
-    }
-  }
+  class Aluno extends Model {}
+
   Aluno.init({
-    nome: Sequelize.STRING,
-    sobrenome: Sequelize.STRING,
-    email: Sequelize.STRING,
+    id:{
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: Sequelize.INTEGER
+    },
+    nome: {
+      type: Sequelize.STRING,
+      defaultValue: '',
+      validate: {
+        len: {
+          args: [3, 255],
+          msg: 'Nome deve ter 03 caracteres ou mais.',
+        },
+      },
+    },
+    sobrenome: {
+      type: Sequelize.STRING,
+      defaultValue: '',
+      validate: {
+        len: {
+          args: [3, 255],
+          msg: 'Sobrenome deve ter 03 caracteres ou mais.',
+        },
+      },
+    },
+    email: {
+      type: Sequelize.STRING,
+      defaultValue: '',
+      unique: {
+        args: true,
+        msg: 'Email já consta na base de dados!',
+      },
+      validate: {
+        isEmail: {
+          msg: 'E-mail inválido.',
+        },
+      },
+    },
     nascimento: Sequelize.DATE,
-    endereco_id: Sequelize.INTEGER,
+    endereco_id: {
+      type: Sequelize.INTEGER,
+      defaultValue: 0,
+      validate: {
+        isInt: {
+          msg: 'Id de endereço deve ser numérico.',
+        },
+      },
+    },
+    ativo: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true,
+    },
   }, {
     sequelize: new Sequelize(databaseConfig),
     tableName: 'alunos',
