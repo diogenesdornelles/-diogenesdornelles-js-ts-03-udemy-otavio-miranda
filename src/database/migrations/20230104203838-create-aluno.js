@@ -1,29 +1,29 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up (queryInterface, Sequelize) {
     await queryInterface.createTable('alunos', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER
       },
       nome: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       sobrenome: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
+        unique: true
       },
-      nascimento: {
+      dtnascimento: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: false
       },
       endereco_id: {
         type: Sequelize.INTEGER,
@@ -34,28 +34,39 @@ module.exports = {
             schema: 'escola'
           },
           key: 'id'
-        },
+        }
+      },
+      curso_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: {
+            tableName: 'cursos',
+            schema: 'escola'
+          },
+          key: 'id'
+        }
       },
       ativo: {
         type: Sequelize.BOOLEAN,
-        defaultValue: true,
+        defaultValue: true
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)')
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)'),
-      },
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)')
+      }
     }, {
       engine: 'InnoDB',
-      charset: 'utf8mb4',
-    });
+      charset: 'utf8mb4'
+    })
   },
-  async down(queryInterface) {
-    await queryInterface.dropTable('alunos');
-  },
-};
+  async down (queryInterface) {
+    await queryInterface.dropTable('alunos')
+  }
+}

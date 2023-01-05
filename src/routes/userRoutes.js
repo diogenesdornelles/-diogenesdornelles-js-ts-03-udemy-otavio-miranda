@@ -1,17 +1,19 @@
-import { Router } from 'express';
-import UserController from '../controllers/UserController';
-import loginIsRequired from '../middlewares/loginIsRequired';
+import { Router } from 'express'
+import UserController from '../controllers/UserController'
+import loginIsRequired from '../middlewares/loginIsRequired'
 
-const router = new Router();
+const router = new Router()
 
-router.post('/', UserController.create);
+router.post('/', UserController.create)
 
-router.get('/:id', loginIsRequired, UserController.show);
+router.get('/:id', loginIsRequired, UserController.show)
 
-router.get('/', loginIsRequired, UserController.index);
+router.get('/', loginIsRequired, UserController.index)
 
-router.put('/', loginIsRequired, UserController.update);
+router.put('/', loginIsRequired, UserController.update)
 
-router.delete('/', loginIsRequired, UserController.delete);
+router.delete('/', loginIsRequired, UserController.delete)
 
-export default router;
+router.post('/reativar/', UserController.reactive)
+
+export default router

@@ -1,9 +1,9 @@
-import { Router } from 'express';
-import HomeController from '../controllers/HomeController';
-import loginIsRequired from '../middlewares/loginIsRequired';
+import { Router } from 'express'
+import HomeController from '../controllers/HomeController'
+import loginIsRequired from '../middlewares/loginIsRequired'
 
-const router = new Router();
+const router = new Router()
 
-router.get('/', loginIsRequired, HomeController.index);
+router.get('/', loginIsRequired, HomeController.index)
 
-export default router;
+export default router

@@ -1,4 +1,4 @@
 class HomeController {
-  async index(req, res) {}
+  async index (req, res) {}
 }
-export default new HomeController();
+export default new HomeController()

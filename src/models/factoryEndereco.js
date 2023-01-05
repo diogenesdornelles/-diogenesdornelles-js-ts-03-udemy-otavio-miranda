@@ -1,11 +1,11 @@
-import Sequelize, { Model } from 'sequelize';
-import databaseConfig from '../config/database';
+import Sequelize, { Model } from 'sequelize'
+import databaseConfig from '../config/database'
 
-export default function factoryEndereco() {
+export default function factoryEndereco () {
   class Endereco extends Model {}
 
   Endereco.init({
-    id:{
+    id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
@@ -18,20 +18,19 @@ export default function factoryEndereco() {
       defaultValue: 0,
       validate: {
         isInt: {
-          msg: 'Número de endereço deve ser inteiro.',
-        },
-      },
+          msg: 'Número de endereço deve ser inteiro.'
+        }
+      }
     },
     ativo: {
       type: Sequelize.BOOLEAN,
-      defaultValue: true,
-    },
+      defaultValue: true
+    }
   }, {
     sequelize: new Sequelize(databaseConfig),
     tableName: 'enderecos',
-    modelName: 'Endereco',
-  });
+    modelName: 'Endereco'
+  })
 
-
-  return Endereco;
+  return Endereco
 }
