@@ -14,6 +14,6 @@ router.put('/:id', loginIsRequired, AlunoController.update)
 
 router.delete('/:id', loginIsRequired, AlunoController.delete)
 
-router.post('/reativar/', loginIsRequired, AlunoController.reactive)
+router.post('/reativar/', loginIsRequired, AlunoController.reactivate)
 
 export default router

@@ -119,7 +119,7 @@ class UserController {
     }
   }
 
-  async reactive (req, res) {
+  async reactivate (req, res) {
     const { email, password } = req.body
     if (!email || !password) {
       return res.status(400).json({
@@ -155,9 +155,9 @@ class UserController {
         })
       };
       const newPassword = randomPassword()
-      const reactivedUser = await user.update({ ativo: true, password: newPassword })
+      const reactivatedUser = await user.update({ ativo: true, password: newPassword })
       return res.status(200).json({
-        success: `Usuário(a) ${reactivedUser.nome} reativado(a)! Sua nova senha gerada automaticamente pelo sistema foi ${newPassword}. Faça o login com ela e altere-a e depois se reautentique`
+        success: `Usuário(a) ${reactivatedUser.nome} reativado(a)! Sua nova senha gerada automaticamente pelo sistema foi ${newPassword}. Faça o login com ela e altere-a e depois se reautentique`
       })
     } catch (err) {
       return res.status(400).json(err)

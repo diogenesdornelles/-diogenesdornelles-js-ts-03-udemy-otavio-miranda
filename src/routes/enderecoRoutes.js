@@ -14,6 +14,6 @@ router.put('/:id', loginIsRequired, EnderecoController.update)
 
 router.delete('/:id', loginIsRequired, EnderecoController.delete)
 
-router.post('/reativar/:id', loginIsRequired, EnderecoController.reactive)
+router.post('/reativar/:id', loginIsRequired, EnderecoController.reactivate)
 
 export default router

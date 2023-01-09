@@ -42,9 +42,9 @@ export default function factoryCurso () {
         isInt: {
           msg: 'Duração em semestres deve ser inteiro "duracao_semestres".'
         },
-        len: {
-          args: [4, 255],
-          msg: 'Duração deve ser no mínimo 04 semestres!'
+        min: {
+          args: 4,
+          msg: 'Duração deve ter no mínimo 04 semestres!'
         }
       }
     },

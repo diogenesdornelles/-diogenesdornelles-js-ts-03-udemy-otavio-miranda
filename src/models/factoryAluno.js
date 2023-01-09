@@ -1,7 +1,5 @@
 import Sequelize, { Model } from 'sequelize'
 import databaseConfig from '../config/database'
-import factoryEndereco from './factoryEndereco'
-import factoryCurso from './factoryCurso'
 
 export default function factoryAluno () {
   class Aluno extends Model {}
@@ -65,6 +63,15 @@ export default function factoryAluno () {
         }
       }
     },
+    turma_id: {
+      type: Sequelize.INTEGER,
+      defaultValue: 0,
+      validate: {
+        isInt: {
+          msg: 'Id de turma deve ser numérico.'
+        }
+      }
+    },
     ativo: {
       type: Sequelize.BOOLEAN,
       defaultValue: true
@@ -74,19 +81,5 @@ export default function factoryAluno () {
     tableName: 'alunos',
     modelName: 'Aluno'
   })
-  const Endereco = factoryEndereco()
-  Aluno.belongsTo(Endereco, {
-    foreignKey: 'endereco_id',
-    targetKey: 'id',
-    as: 'endereco'
-  })
-  Endereco.hasOne(Aluno)
-  const Curso = factoryCurso()
-  Aluno.belongsTo(Curso, {
-    foreignKey: 'curso_id',
-    targetKey: 'id',
-    as: 'curso'
-  })
-  Curso.hasMany(Aluno)
   return Aluno
 }

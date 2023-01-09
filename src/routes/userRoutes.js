@@ -14,6 +14,6 @@ router.put('/', loginIsRequired, UserController.update)
 
 router.delete('/', loginIsRequired, UserController.delete)
 
-router.post('/reativar/', UserController.reactive)
+router.post('/reativar/', UserController.reactivate)
 
 export default router

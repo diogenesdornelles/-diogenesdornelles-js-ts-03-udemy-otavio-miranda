@@ -5,6 +5,7 @@ import tokenRoutes from './src/routes/tokenRoutes'
 import enderecoRoutes from './src/routes/enderecoRoutes'
 import alunoRoutes from './src/routes/alunoRoutes'
 import cursoRoutes from './src/routes/cursoRoutes'
+import turmaRoutes from './src/routes/turmaRoutes'
 require('dotenv').config()
 
 class App {
@@ -26,6 +27,7 @@ class App {
     this.app.use('/tokens/', tokenRoutes)
     this.app.use('/alunos/', alunoRoutes)
     this.app.use('/cursos/', cursoRoutes)
+    this.app.use('/turmas/', turmaRoutes)
   }
 }
 

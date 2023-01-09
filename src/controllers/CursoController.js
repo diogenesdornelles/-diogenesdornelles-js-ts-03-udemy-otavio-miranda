@@ -1,6 +1,8 @@
 /* eslint-disable camelcase */
 // import factoryAluno from '../models/factoryAluno'
 import factoryCurso from '../models/factoryCurso'
+import factoryTurma from '../models/factoryTurma'
+import { associateTurmaToCurso } from '../models/modules/associations'
 
 class CursoController {
   // user create curso
@@ -11,6 +13,7 @@ class CursoController {
       const Curso = factoryCurso()
       const curso = await Curso.create(req.body)
       const { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados } = curso
+      console.log(duracao_semestres)
       return res.status(201).json({ success: { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados } })
     } catch (err) {
       console.log(err)
@@ -46,23 +49,26 @@ class CursoController {
     if (res.statusCode > 299) return
     const { id } = req.params
     try {
+      const Turma = factoryTurma()
       const Curso = factoryCurso()
+      associateTurmaToCurso(Turma, Curso)
       const curso = await Curso.findOne({
         where: {
           id,
           ativo: true
         },
-        attributes: ['id', 'nome', 'periodo', 'duracao_semestres', 'mes_inicio', 'alunos_id', 'n_alunos_matriculados']
+        attributes: ['id', 'nome', 'periodo', 'duracao_semestres', 'mes_inicio', 'alunos_id', 'n_alunos_matriculados'],
+        include: [{
+          model: Turma,
+          attributes: ['id', 'nome', 'curso_id']
+        }]
       })
       if (!curso) {
         return res.status(404).json({ error: 'Curso não encontrado!' })
       }
-
-      const { nome, periodo, duracao_semestres, mes_inicio, alunos_id } = curso
-
-      console.log(typeof alunos_id)
+      const { nome, periodo, duracao_semestres, mes_inicio, alunos_id, Turmas } = curso
       const n_alunos_matriculados = curso.dataValues.n_alunos_matriculados
-      return res.status(200).json({ success: { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados } })
+      return res.status(200).json({ success: { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados, Turmas } })
     } catch (err) {
       console.log(err)
       return res.status(204).json(null)
@@ -87,16 +93,6 @@ class CursoController {
       if (!curso) {
         return res.status(400).json({
           error: 'Curso não existe no cadastro ou está inativo!'
-        })
-      }
-      if ('ativo' in req.body) {
-        return res.status(400).json({
-          error: 'Use outro método adequado para excluir curso!'
-        })
-      }
-      if ('created_at' in req.body || 'updated_at' in req.body) {
-        return res.status(400).json({
-          error: 'Não é possível atualizar este(s) campo(s)!'
         })
       }
       const newCursoData = await curso.update(req.body)
@@ -141,7 +137,7 @@ class CursoController {
     }
   }
 
-  async reactive (req, res) {
+  async reactivate (req, res) {
     const { nome } = req.body
     if (!nome) {
       return res.status(400).json({
@@ -165,9 +161,9 @@ class CursoController {
           error: 'Curso já está ativo(a)!'
         })
       }
-      const reactivedCurso = await curso.update({ ativo: true })
+      const reactivatedCurso = await curso.update({ ativo: true })
       return res.status(200).json({
-        success: `Curso ${reactivedCurso.nome} reativado(a)!`
+        success: `Curso ${reactivatedCurso.nome} reativado(a)!`
       })
     } catch (err) {
       return res.status(400).json(err)
@@ -183,14 +179,27 @@ CursoController.validateCurso = async (req, res) => {
       error: 'Fornecer dados completos (nome, periodo, duracao em semestres, mes de inicio)!'
     })
   };
-
+  if ('ativo' in req.body) {
+    return res.status(400).json({
+      error: 'Use outro método adequado para excluir curso!'
+    })
+  }
+  if ('created_at' in req.body || 'updated_at' in req.body || 'n_alunos_matriculados' in req.body) {
+    return res.status(400).json({
+      error: 'Não é possível atualizar este(s) campo(s)!'
+    })
+  }
+  if ('alunos_id' in req.body) {
+    return res.status(400).json({
+      error: 'Use outro método adequado para modificar alunos inclusos!'
+    })
+  }
   const date = /^[0-9]{2}\/[0-9]{4}$/i
   if (!date.test(mes_inicio)) {
     return res.status(400).json({
       error: 'Fornecer data de início válida (mm/aaaa)!'
     })
   }
-
   const month = mes_inicio.slice(0, 2)
   const year = mes_inicio.slice(3)
   const currentYear = new Date().getFullYear()
@@ -199,26 +208,22 @@ CursoController.validateCurso = async (req, res) => {
       error: 'Fornecer data de início válida (mm/aaaa)!'
     })
   }
-
   const periods = ['diurno', 'noturno', 'diurno e noturno']
   if (!periods.includes(periodo)) {
     return res.status(400).json({
       error: 'Período deve ser noturno, diurno ou diurno e noturno!'
     })
   }
-
   if (!Number.isInteger(duracao_semestres)) {
     return res.status(400).json({
       error: 'Meses de duração do curso deve ser do tipo inteiro!'
     })
   }
-
-  if (duracao_semestres < 4) {
+  if (req.body.duracao_semestres < 4) {
     return res.status(400).json({
       error: 'Duração do curso deve ser de pelo menos 04 semestres!'
     })
   }
-
   const Curso = factoryCurso()
   const curso = await Curso.findOne({ where: { nome } })
   if (curso && req.method !== 'PUT') {

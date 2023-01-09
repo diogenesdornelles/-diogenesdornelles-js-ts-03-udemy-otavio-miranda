@@ -47,6 +47,17 @@ module.exports = {
           key: 'id'
         }
       },
+      turma_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: {
+            tableName: 'turmas',
+            schema: 'escola'
+          },
+          key: 'id'
+        }
+      },
       ativo: {
         type: Sequelize.BOOLEAN,
         defaultValue: true

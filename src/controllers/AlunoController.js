@@ -1,7 +1,9 @@
 /* eslint-disable camelcase */
 import factoryAluno from '../models/factoryAluno'
-import factoryEndereco from '../models/factoryEndereco'
 import factoryCurso from '../models/factoryCurso'
+import factoryEndereco from '../models/factoryEndereco'
+import factoryTurma from '../models/factoryTurma'
+import { associateAlunoToCurso, associateAlunoToEndereco, associateAlunoToTurma } from '../models/modules/associations'
 const validator = require('validator')
 
 class AlunoController {
@@ -14,14 +16,14 @@ class AlunoController {
       const Aluno = factoryAluno()
       const Curso = factoryCurso()
       const aluno = await Aluno.create(req.body)
-      const { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id } = aluno
+      const { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = aluno
       const curso = await Curso.findByPk(curso_id)
       const objectAlunos = curso.alunos_id
       const key = Object.keys(objectAlunos).length + 1
       objectAlunos[key] = { id, nome, sobrenome, email }
       const strAlunos = JSON.stringify(objectAlunos)
       await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
-      return res.status(201).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id } })
+      return res.status(201).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -41,7 +43,7 @@ class AlunoController {
         where: {
           ativo: true
         },
-        attributes: ['nome', 'sobrenome', 'email', 'dtnascimento', 'endereco_id', 'curso_id']
+        attributes: ['id', 'nome', 'sobrenome', 'email', 'dtnascimento', 'endereco_id', 'curso_id', 'turma_id']
       })
       return res.status(200).json(alunos)
     } catch (err) {
@@ -59,56 +61,33 @@ class AlunoController {
       const Aluno = factoryAluno()
       const Endereco = factoryEndereco()
       const Curso = factoryCurso()
+      const Turma = factoryTurma()
+      associateAlunoToEndereco(Aluno, Endereco)
+      associateAlunoToCurso(Aluno, Curso)
+      associateAlunoToTurma(Aluno, Turma)
       const aluno = await Aluno.findOne({
         where: {
           id
         },
-        attributes: ['nome', 'sobrenome', 'email', 'dtnascimento'],
+        attributes: ['id', 'nome', 'sobrenome', 'email', 'dtnascimento'],
         include: [{
           model: Endereco,
-          as: 'endereco',
-          attributes: ['municipio', 'rua', 'numero']
+          attributes: ['id', 'municipio', 'rua', 'numero']
         }, {
           model: Curso,
-          as: 'curso',
-          attributes: ['nome', 'periodo']
+          attributes: ['id', 'nome', 'periodo']
+        }, {
+          model: Turma,
+          attributes: ['id', 'nome', 'curso_id']
         }]
       })
-      const { nome, sobrenome, email, dtnascimento, endereco, curso } = aluno
-      return res.status(200).json({ nome, sobrenome, email, dtnascimento, endereco, curso })
+      const { nome, sobrenome, email, dtnascimento, endereco, curso, turma } = aluno
+      return res.status(200).json({ nome, sobrenome, email, dtnascimento, endereco, curso, turma })
     } catch (err) {
       console.log(err)
       return res.status(204).json(null)
     }
   }
-
-  // async showAlunos (req, res) {
-  //   if (res.statusCode > 299) return
-  //   const { id } = req.params
-  //   try {
-  //     const Aluno = factoryAluno()
-  //     const aluno = await Aluno.findOne({
-  //       where: {
-  //         id
-  //       },
-  //       attributes: ['nome', 'sobrenome', 'email', 'dtnascimento'],
-  //       include: [{
-  //         model: this.Endereco,
-  //         as: 'endereco',
-  //         attributes: ['municipio', 'rua', 'numero']
-  //       }, {
-  //         model: this.Curso,
-  //         as: 'curso',
-  //         attributes: ['nome', 'periodo']
-  //       }]
-  //     })
-  //     const { nome, sobrenome, email, dtnascimento, endereco, curso } = aluno
-  //     return res.status(200).json({ nome, sobrenome, email, dtnascimento, endereco, curso })
-  //   } catch (err) {
-  //     console.log(err)
-  //     return res.status(204).json(null)
-  //   }
-  // }
 
   // update an aluno
   async update (req, res) {
@@ -119,25 +98,33 @@ class AlunoController {
     const { id } = req.params
     try {
       const Aluno = factoryAluno()
+      const Curso = factoryCurso()
       const aluno = await Aluno.findByPk(id)
+      const idOldCurso = aluno.curso_id
       if (!aluno) {
         return res.status(400).json({
           error: 'Aluno não existe no cadastro!'
         })
       }
-      if ('ativo' in req.body) {
-        return res.status(400).json({
-          error: 'Use outro método adequado para excluir aluno!'
-        })
+      const alteredAluno = await aluno.update(req.body)
+      const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = alteredAluno
+      if (idOldCurso !== req.body.curso_id) {
+        const oldCurso = await Curso.findByPk(aluno.curso_id)
+        const objectAlunosOldCurso = oldCurso.alunos_id
+        if (aluno.id in objectAlunosOldCurso) {
+          delete objectAlunosOldCurso[aluno.id]
+          const strAlunos = JSON.stringify(objectAlunosOldCurso)
+          await oldCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: --oldCurso.n_alunos_matriculados })
+        }
+        const newCurso = await Curso.findByPk(alteredAluno.curso_id)
+        const objectAlunos = newCurso.alunos_id
+        const key = Object.keys(objectAlunos).length + 1
+        objectAlunos[key] = { id, nome, sobrenome, email }
+        const strAlunos = JSON.stringify(objectAlunos)
+        await newCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++newCurso.n_alunos_matriculados })
       }
-      if ('created_at' in req.body || 'updated_at' in req.body) {
-        return res.status(400).json({
-          error: 'Não é possível atualizar este(s) campo(s)!'
-        })
-      }
-      const newAlunoData = await aluno.update(req.body)
-      const { nome, sobrenome, email, dtnascimento, endereco_id } = newAlunoData
-      return res.status(200).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id } })
+
+      return res.status(200).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -180,7 +167,7 @@ class AlunoController {
     }
   }
 
-  async reactive (req, res) {
+  async reactivate (req, res) {
     const { email } = req.body
     if (!email) {
       return res.status(400).json({
@@ -210,7 +197,7 @@ class AlunoController {
         })
       }
       const { id, nome, sobrenome, curso_id } = aluno
-      const reactivedAluno = await aluno.update({ ativo: true })
+      const reactivatedAluno = await aluno.update({ ativo: true })
       const Curso = factoryCurso()
       const curso = await Curso.findByPk(curso_id)
       const objectAlunos = curso.alunos_id
@@ -218,7 +205,7 @@ class AlunoController {
       const strAlunos = JSON.stringify(objectAlunos)
       await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
       return res.status(200).json({
-        success: `Aluno(a) ${reactivedAluno.nome} reativado(a)!`
+        success: `Aluno(a) ${reactivatedAluno.nome} reativado(a)!`
       })
     } catch (err) {
       return res.status(400).json(err)
@@ -227,21 +214,31 @@ class AlunoController {
 }
 
 AlunoController.validateAluno = async (req, res) => {
-  const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id } = req.body
-  const check = nome && sobrenome && email && dtnascimento && endereco_id && curso_id
+  const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = req.body
+  const check = nome && sobrenome && email && dtnascimento && endereco_id && curso_id && turma_id
   if (!check) {
     return res.status(400).json({
-      error: 'Fornecer dados completos (nome, sobrenome, email, nascimento, id de endereço)!'
+      error: 'Fornecer dados completos (nome, sobrenome, email, nascimento, id de endereço, turma e de curso)!'
     })
   };
   if (req.body.sobrenome.length < 3) {
     return res.status(400).json({
       error: 'Fornecer sobrenome com ao menos 03 caracteres!'
     })
-  };
+  }
   if (req.body.nome.length < 3) {
     return res.status(400).json({
       error: 'Fornecer nome com ao menos 03 caracteres!'
+    })
+  }
+  if ('ativo' in req.body) {
+    return res.status(400).json({
+      error: 'Use outro método adequado para excluir aluno!'
+    })
+  }
+  if ('created_at' in req.body || 'updated_at' in req.body) {
+    return res.status(400).json({
+      error: 'Não é possível atualizar este(s) campo(s)!'
     })
   }
   const regex = /^\d{2}\/\d{2}\/\d{4}$/
@@ -275,13 +272,19 @@ AlunoController.validateAluno = async (req, res) => {
       error: 'Curso id deve ser do tipo inteiro!'
     })
   }
+  if (!Number.isInteger(turma_id)) {
+    return res.status(400).json({
+      error: 'Curso id deve ser do tipo inteiro!'
+    })
+  }
   const Aluno = factoryAluno()
   const Endereco = factoryEndereco()
   const Curso = factoryCurso()
+  const Turma = factoryTurma()
   const endereco = await Endereco.findByPk(endereco_id)
   if (!endereco) {
     return res.status(400).json({
-      error: 'Endereço não existe!'
+      error: 'Endereço informado não existe!'
     })
   }
   if (endereco && !endereco.ativo) {
@@ -292,7 +295,7 @@ AlunoController.validateAluno = async (req, res) => {
   const curso = await Curso.findByPk(curso_id)
   if (!curso) {
     return res.status(400).json({
-      error: 'Curso não existe!'
+      error: 'Curso informado não existe!'
     })
   }
   if (curso && !curso.ativo) {
@@ -300,12 +303,23 @@ AlunoController.validateAluno = async (req, res) => {
       error: 'Curso foi excluído. Siga as diretrizes para reativá-lo!'
     })
   }
+  const turma = await Turma.findByPk(turma_id)
+  if (!turma) {
+    return res.status(400).json({
+      error: 'Turma informada não existe!'
+    })
+  }
+  if (turma && !turma.ativo) {
+    return res.status(400).json({
+      error: 'Turma foi excluída. Siga as diretrizes para reativá-lo!'
+    })
+  }
   const aluno = await Aluno.findOne({
     where: {
       email
     }
   })
-  if (aluno) {
+  if (aluno && req.method !== 'PUT') {
     return res.status(400).json({
       error: 'Aluno já existe na base de dados!'
     })

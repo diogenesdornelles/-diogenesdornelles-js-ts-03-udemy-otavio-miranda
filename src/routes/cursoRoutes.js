@@ -14,6 +14,6 @@ router.put('/:id', loginIsRequired, CursoController.update)
 
 router.delete('/:id', loginIsRequired, CursoController.delete)
 
-router.post('/reativar/', CursoController.reactive)
+router.post('/reativar/', CursoController.reactivate)
 
 export default router

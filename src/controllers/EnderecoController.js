@@ -127,7 +127,7 @@ class EnderecoController {
     }
   }
 
-  async reactive (req, res) {
+  async reactivate (req, res) {
     EnderecoController.validateId(req, res)
     const { id } = req.params
     try {
