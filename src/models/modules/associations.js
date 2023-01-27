@@ -22,6 +22,14 @@ export function associateAlunoToTurma (Aluno, Turma) {
   Turma.hasMany(Aluno)
 }
 
+export function associateAlunoToPhoto (Aluno, Photo) {
+  Aluno.belongsTo(Photo, {
+    foreignKey: 'photo_id',
+    targetKey: 'id'
+  })
+  Photo.hasMany(Aluno)
+}
+
 export function associateTurmaToCurso (Turma, Curso) {
   Turma.belongsTo(Curso, {
     foreignKey: 'curso_id',

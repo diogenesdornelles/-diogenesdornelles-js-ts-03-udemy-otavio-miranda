@@ -72,6 +72,15 @@ export default function factoryAluno () {
         }
       }
     },
+    photo_id: {
+      type: Sequelize.INTEGER,
+      defaultValue: 0,
+      validate: {
+        isInt: {
+          msg: 'Id de photo deve ser numérico.'
+        }
+      }
+    },
     ativo: {
       type: Sequelize.BOOLEAN,
       defaultValue: true

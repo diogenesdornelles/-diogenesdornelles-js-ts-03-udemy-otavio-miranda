@@ -3,7 +3,8 @@ import factoryAluno from '../models/factoryAluno'
 import factoryCurso from '../models/factoryCurso'
 import factoryEndereco from '../models/factoryEndereco'
 import factoryTurma from '../models/factoryTurma'
-import { associateAlunoToCurso, associateAlunoToEndereco, associateAlunoToTurma } from '../models/modules/associations'
+import factoryPhoto from '../models/factoryPhoto'
+import { associateAlunoToCurso, associateAlunoToEndereco, associateAlunoToTurma, associateAlunoToPhoto } from '../models/modules/associations'
 const validator = require('validator')
 
 class AlunoController {
@@ -16,14 +17,14 @@ class AlunoController {
       const Aluno = factoryAluno()
       const Curso = factoryCurso()
       const aluno = await Aluno.create(req.body)
-      const { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = aluno
+      const { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } = aluno
       const curso = await Curso.findByPk(curso_id)
       const objectAlunos = curso.alunos_id
       const key = Object.keys(objectAlunos).length + 1
       objectAlunos[key] = { id, nome, sobrenome, email }
       const strAlunos = JSON.stringify(objectAlunos)
       await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
-      return res.status(201).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } })
+      return res.status(201).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -43,7 +44,7 @@ class AlunoController {
         where: {
           ativo: true
         },
-        attributes: ['id', 'nome', 'sobrenome', 'email', 'dtnascimento', 'endereco_id', 'curso_id', 'turma_id']
+        attributes: ['id', 'nome', 'sobrenome', 'email', 'dtnascimento', 'endereco_id', 'curso_id', 'turma_id', 'photo_id']
       })
       return res.status(200).json(alunos)
     } catch (err) {
@@ -62,9 +63,11 @@ class AlunoController {
       const Endereco = factoryEndereco()
       const Curso = factoryCurso()
       const Turma = factoryTurma()
+      const Photo = factoryPhoto()
       associateAlunoToEndereco(Aluno, Endereco)
       associateAlunoToCurso(Aluno, Curso)
       associateAlunoToTurma(Aluno, Turma)
+      associateAlunoToPhoto(Aluno, Photo)
       const aluno = await Aluno.findOne({
         where: {
           id
@@ -79,10 +82,13 @@ class AlunoController {
         }, {
           model: Turma,
           attributes: ['id', 'nome', 'curso_id']
-        }]
+        }, {
+          model: Photo,
+          attributes: ['id', 'filename', 'originalname']
+        }
+        ]
       })
-      const { nome, sobrenome, email, dtnascimento, endereco, curso, turma } = aluno
-      return res.status(200).json({ nome, sobrenome, email, dtnascimento, endereco, curso, turma })
+      return res.status(200).json(aluno)
     } catch (err) {
       console.log(err)
       return res.status(204).json(null)
@@ -107,7 +113,7 @@ class AlunoController {
         })
       }
       const alteredAluno = await aluno.update(req.body)
-      const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = alteredAluno
+      const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } = alteredAluno
       if (idOldCurso !== req.body.curso_id) {
         const oldCurso = await Curso.findByPk(aluno.curso_id)
         const objectAlunosOldCurso = oldCurso.alunos_id
@@ -124,7 +130,7 @@ class AlunoController {
         await newCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++newCurso.n_alunos_matriculados })
       }
 
-      return res.status(200).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } })
+      return res.status(200).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -214,8 +220,8 @@ class AlunoController {
 }
 
 AlunoController.validateAluno = async (req, res) => {
-  const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id } = req.body
-  const check = nome && sobrenome && email && dtnascimento && endereco_id && curso_id && turma_id
+  const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } = req.body
+  const check = nome && sobrenome && email && dtnascimento && endereco_id && curso_id && turma_id && photo_id
   if (!check) {
     return res.status(400).json({
       error: 'Fornecer dados completos (nome, sobrenome, email, nascimento, id de endereço, turma e de curso)!'
@@ -277,10 +283,16 @@ AlunoController.validateAluno = async (req, res) => {
       error: 'Curso id deve ser do tipo inteiro!'
     })
   }
+  if (!Number.isInteger(photo_id)) {
+    return res.status(400).json({
+      error: 'Foto id deve ser do tipo inteiro!'
+    })
+  }
   const Aluno = factoryAluno()
   const Endereco = factoryEndereco()
   const Curso = factoryCurso()
   const Turma = factoryTurma()
+  const Photo = factoryPhoto()
   const endereco = await Endereco.findByPk(endereco_id)
   if (!endereco) {
     return res.status(400).json({
@@ -312,6 +324,12 @@ AlunoController.validateAluno = async (req, res) => {
   if (turma && !turma.ativo) {
     return res.status(400).json({
       error: 'Turma foi excluída. Siga as diretrizes para reativá-lo!'
+    })
+  }
+  const photo = await Photo.findByPk(photo_id)
+  if (!photo) {
+    return res.status(400).json({
+      error: 'Foto informada não existe!'
     })
   }
   const aluno = await Aluno.findOne({

@@ -13,7 +13,6 @@ class CursoController {
       const Curso = factoryCurso()
       const curso = await Curso.create(req.body)
       const { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados } = curso
-      console.log(duracao_semestres)
       return res.status(201).json({ success: { id, nome, periodo, duracao_semestres, mes_inicio, alunos_id, n_alunos_matriculados } })
     } catch (err) {
       console.log(err)

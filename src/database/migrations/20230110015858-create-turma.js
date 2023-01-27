@@ -15,14 +15,16 @@ module.exports = {
       },
       curso_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: {
             tableName: 'cursos',
             schema: 'escola'
           },
           key: 'id'
-        }
+        },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
       },
       ativo: {
         type: Sequelize.BOOLEAN,
