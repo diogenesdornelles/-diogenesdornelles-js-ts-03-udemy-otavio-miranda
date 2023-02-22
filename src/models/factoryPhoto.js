@@ -1,5 +1,6 @@
 import Sequelize, { Model } from 'sequelize'
 import databaseConfig from '../config/database'
+import appConfig from '../config/appConfig'
 
 export default function factoryPhoto () {
   class Photo extends Model {}
@@ -25,6 +26,12 @@ export default function factoryPhoto () {
       unique: {
         args: true,
         msg: 'Necessário fornecer filename'
+      }
+    },
+    url: {
+      type: Sequelize.VIRTUAL,
+      get () {
+        return `${appConfig.url}/images/${this.getDataValue('filename')}`
       }
     }
   }, {

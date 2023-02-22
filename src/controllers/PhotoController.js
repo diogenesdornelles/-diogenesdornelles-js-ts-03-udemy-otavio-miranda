@@ -1,6 +1,6 @@
+import factoryPhoto from '../models/factoryPhoto'
 import multer from 'multer'
 import multerConfig from '../../src/config/multer'
-import factoryPhoto from '../models/factoryPhoto'
 const photo = multer(multerConfig).single('file')
 
 class PhotoController {
@@ -16,7 +16,8 @@ class PhotoController {
           return res.status(200).json({
             message: 'Foto salva!',
             id: _photo.id,
-            info: req.file
+            info: req.file,
+            url: _photo.url
           })
         })
         .catch((err) => {
@@ -32,7 +33,7 @@ class PhotoController {
     try {
       const Photo = factoryPhoto()
       const photos = await Photo.findAll({
-        attributes: ['id', 'filename', 'originalname']
+        attributes: ['id', 'filename', 'originalname', 'url']
       })
       return res.status(200).json({ success: photos })
     } catch (err) {

@@ -2,7 +2,7 @@
 import factoryAluno from '../models/factoryAluno'
 import factoryCurso from '../models/factoryCurso'
 import factoryTurma from '../models/factoryTurma'
-import { associateAlunoToTurma } from '../models/modules/associations'
+import Associations from '../models/modules/Associations'
 
 class TurmaController {
   // user create turma
@@ -50,7 +50,7 @@ class TurmaController {
     try {
       const Turma = factoryTurma()
       const Aluno = factoryAluno()
-      associateAlunoToTurma(Aluno, Turma)
+      Associations.associateAlunoToTurma(Aluno, Turma)
       const turma = await Turma.findOne({
         where: {
           id,

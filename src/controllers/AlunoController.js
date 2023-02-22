@@ -2,9 +2,9 @@
 import factoryAluno from '../models/factoryAluno'
 import factoryCurso from '../models/factoryCurso'
 import factoryEndereco from '../models/factoryEndereco'
-import factoryTurma from '../models/factoryTurma'
 import factoryPhoto from '../models/factoryPhoto'
-import { associateAlunoToCurso, associateAlunoToEndereco, associateAlunoToTurma, associateAlunoToPhoto } from '../models/modules/associations'
+import factoryTurma from '../models/factoryTurma'
+import Associations from '../models/modules/Associations'
 const validator = require('validator')
 
 class AlunoController {
@@ -15,16 +15,10 @@ class AlunoController {
     if (res.statusCode > 299) return
     try {
       const Aluno = factoryAluno()
-      const Curso = factoryCurso()
       const aluno = await Aluno.create(req.body)
       const { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } = aluno
-      const curso = await Curso.findByPk(curso_id)
-      const objectAlunos = curso.alunos_id
-      const key = Object.keys(objectAlunos).length + 1
-      objectAlunos[key] = { id, nome, sobrenome, email }
-      const strAlunos = JSON.stringify(objectAlunos)
-      await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
-      return res.status(201).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
+      await AlunoController.insertOnCurso(aluno)
+      return res.status(201).json({ success: { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -64,27 +58,32 @@ class AlunoController {
       const Curso = factoryCurso()
       const Turma = factoryTurma()
       const Photo = factoryPhoto()
-      associateAlunoToEndereco(Aluno, Endereco)
-      associateAlunoToCurso(Aluno, Curso)
-      associateAlunoToTurma(Aluno, Turma)
-      associateAlunoToPhoto(Aluno, Photo)
+      Associations.associateAlunoToEndereco(Aluno, Endereco)
+      Associations.associateAlunoToCurso(Aluno, Curso)
+      Associations.associateAlunoToTurma(Aluno, Turma)
+      Associations.associateAlunoToPhoto(Aluno, Photo)
       const aluno = await Aluno.findOne({
         where: {
           id
         },
         attributes: ['id', 'nome', 'sobrenome', 'email', 'dtnascimento'],
+        order: [['id', 'DESC']],
         include: [{
           model: Endereco,
+          as: 'endereco',
           attributes: ['id', 'municipio', 'rua', 'numero']
         }, {
           model: Curso,
+          as: 'curso',
           attributes: ['id', 'nome', 'periodo']
         }, {
           model: Turma,
+          as: 'turma',
           attributes: ['id', 'nome', 'curso_id']
         }, {
           model: Photo,
-          attributes: ['id', 'filename', 'originalname']
+          as: 'photo',
+          attributes: ['id', 'filename', 'originalname', 'url']
         }
         ]
       })
@@ -104,33 +103,17 @@ class AlunoController {
     const { id } = req.params
     try {
       const Aluno = factoryAluno()
-      const Curso = factoryCurso()
       const aluno = await Aluno.findByPk(id)
-      const idOldCurso = aluno.curso_id
       if (!aluno) {
         return res.status(400).json({
           error: 'Aluno não existe no cadastro!'
         })
       }
+      const idOldCurso = aluno.curso_id
       const alteredAluno = await aluno.update(req.body)
       const { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } = alteredAluno
-      if (idOldCurso !== req.body.curso_id) {
-        const oldCurso = await Curso.findByPk(aluno.curso_id)
-        const objectAlunosOldCurso = oldCurso.alunos_id
-        if (aluno.id in objectAlunosOldCurso) {
-          delete objectAlunosOldCurso[aluno.id]
-          const strAlunos = JSON.stringify(objectAlunosOldCurso)
-          await oldCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: --oldCurso.n_alunos_matriculados })
-        }
-        const newCurso = await Curso.findByPk(alteredAluno.curso_id)
-        const objectAlunos = newCurso.alunos_id
-        const key = Object.keys(objectAlunos).length + 1
-        objectAlunos[key] = { id, nome, sobrenome, email }
-        const strAlunos = JSON.stringify(objectAlunos)
-        await newCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++newCurso.n_alunos_matriculados })
-      }
-
-      return res.status(200).json({ success: { nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
+      AlunoController.updateCurso(alteredAluno, idOldCurso)
+      return res.status(200).json({ success: { id, nome, sobrenome, email, dtnascimento, endereco_id, curso_id, turma_id, photo_id } })
     } catch (err) {
       console.log(err)
       const { errors } = err
@@ -149,7 +132,7 @@ class AlunoController {
     const { id } = req.params
     try {
       const Aluno = factoryAluno()
-      const Curso = factoryCurso()
+
       const aluno = await Aluno.findByPk(id)
       if (!aluno) {
         return res.status(400).json({
@@ -157,13 +140,7 @@ class AlunoController {
         })
       }
       await aluno.update({ ativo: false })
-      const curso = await Curso.findByPk(aluno.curso_id)
-      const objectAlunos = curso.alunos_id
-      if (aluno.id in objectAlunos) {
-        delete objectAlunos[aluno.id]
-        const strAlunos = JSON.stringify(objectAlunos)
-        await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: --curso.n_alunos_matriculados })
-      }
+      await AlunoController.deleteFromCurso(aluno)
       return res.status(200).json({
         success: 'Aluno excluído(a)!'
       })
@@ -202,14 +179,8 @@ class AlunoController {
           error: 'Aluno(a) já está ativo(a)!'
         })
       }
-      const { id, nome, sobrenome, curso_id } = aluno
       const reactivatedAluno = await aluno.update({ ativo: true })
-      const Curso = factoryCurso()
-      const curso = await Curso.findByPk(curso_id)
-      const objectAlunos = curso.alunos_id
-      objectAlunos[id] = { id, nome, sobrenome }
-      const strAlunos = JSON.stringify(objectAlunos)
-      await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
+      await AlunoController.insertOnCurso(reactivatedAluno)
       return res.status(200).json({
         success: `Aluno(a) ${reactivatedAluno.nome} reativado(a)!`
       })
@@ -361,6 +332,54 @@ AlunoController.validateId = (req, res) => {
       error: 'Id deve ser do tipo inteiro!'
     })
   }
+}
+
+AlunoController.insertOnCurso = async (aluno) => {
+  try {
+    const { id, nome, sobrenome, email, curso_id } = aluno
+    const Curso = factoryCurso()
+    const curso = await Curso.findByPk(curso_id)
+    const objectAlunos = curso.alunos_id
+    const key = Object.keys(objectAlunos).length + 1
+    objectAlunos[key] = { id, nome, sobrenome, email }
+    const strAlunos = JSON.stringify(objectAlunos)
+    await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++curso.n_alunos_matriculados })
+  } catch (e) { console.log(e) }
+}
+
+AlunoController.updateCurso = async (aluno, idOldCurso) => {
+  const { id, nome, sobrenome, email, curso_id } = aluno
+  const Curso = factoryCurso()
+  try {
+    if (idOldCurso !== curso_id) {
+      const oldCurso = await Curso.findByPk(curso_id)
+      const objectAlunosOldCurso = oldCurso.alunos_id
+      if (aluno.id in objectAlunosOldCurso) {
+        delete objectAlunosOldCurso[aluno.id]
+        const strAlunos = JSON.stringify(objectAlunosOldCurso)
+        await oldCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: --oldCurso.n_alunos_matriculados })
+      }
+      const newCurso = await Curso.findByPk(curso_id)
+      const objectAlunos = newCurso.alunos_id
+      const key = Object.keys(objectAlunos).length + 1
+      objectAlunos[key] = { id, nome, sobrenome, email }
+      const strAlunos = JSON.stringify(objectAlunos)
+      await newCurso.update({ alunos_id: strAlunos, n_alunos_matriculados: ++newCurso.n_alunos_matriculados })
+    }
+  } catch (e) { console.error(e) }
+}
+
+AlunoController.deleteFromCurso = async (aluno) => {
+  const Curso = factoryCurso()
+  const curso = await Curso.findByPk(aluno.curso_id)
+  const objectAlunos = curso.alunos_id
+  try {
+    if (aluno.id in objectAlunos) {
+      delete objectAlunos[aluno.id]
+      const strAlunos = JSON.stringify(objectAlunos)
+      await curso.update({ alunos_id: strAlunos, n_alunos_matriculados: --curso.n_alunos_matriculados })
+    }
+  } catch (e) { console.error(e) }
 }
 
 export default new AlunoController()

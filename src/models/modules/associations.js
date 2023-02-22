@@ -1,39 +1,46 @@
-export function associateAlunoToEndereco (Aluno, Endereco) {
-  Aluno.belongsTo(Endereco, {
-    foreignKey: 'endereco_id',
-    targetKey: 'id'
-  })
-  Endereco.hasOne(Aluno)
-}
+export default class Associations {
+  static associateAlunoToEndereco (Aluno, Endereco) {
+    Aluno.belongsTo(Endereco, {
+      foreignKey: 'endereco_id',
+      targetKey: 'id',
+      as: 'endereco'
+    })
+    Endereco.hasOne(Aluno)
+  }
 
-export function associateAlunoToCurso (Aluno, Curso) {
-  Aluno.belongsTo(Curso, {
-    foreignKey: 'curso_id',
-    targetKey: 'id'
-  })
-  Curso.hasMany(Aluno)
-}
+  static associateAlunoToCurso (Aluno, Curso) {
+    Aluno.belongsTo(Curso, {
+      foreignKey: 'curso_id',
+      targetKey: 'id',
+      as: 'curso'
+    })
+    Curso.hasMany(Aluno)
+  }
 
-export function associateAlunoToTurma (Aluno, Turma) {
-  Aluno.belongsTo(Turma, {
-    foreignKey: 'turma_id',
-    targetKey: 'id'
-  })
-  Turma.hasMany(Aluno)
-}
+  static associateAlunoToTurma (Aluno, Turma) {
+    Aluno.belongsTo(Turma, {
+      foreignKey: 'turma_id',
+      targetKey: 'id',
+      as: 'turma'
+    })
+    Turma.hasMany(Aluno)
+  }
 
-export function associateAlunoToPhoto (Aluno, Photo) {
-  Aluno.belongsTo(Photo, {
-    foreignKey: 'photo_id',
-    targetKey: 'id'
-  })
-  Photo.hasMany(Aluno)
-}
+  static associateAlunoToPhoto (Aluno, Photo) {
+    Aluno.belongsTo(Photo, {
+      foreignKey: 'photo_id',
+      targetKey: 'id',
+      as: 'photo'
+    })
+    Photo.hasMany(Aluno)
+  }
 
-export function associateTurmaToCurso (Turma, Curso) {
-  Turma.belongsTo(Curso, {
-    foreignKey: 'curso_id',
-    targetKey: 'id'
-  })
-  Curso.hasMany(Turma)
+  static associateTurmaToCurso (Turma, Curso) {
+    Turma.belongsTo(Curso, {
+      foreignKey: 'curso_id',
+      targetKey: 'id',
+      as: 'curso'
+    })
+    Curso.hasMany(Turma)
+  }
 }

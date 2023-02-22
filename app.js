@@ -6,6 +6,7 @@ import alunoRoutes from './src/routes/alunoRoutes'
 import cursoRoutes from './src/routes/cursoRoutes'
 import turmaRoutes from './src/routes/turmaRoutes'
 import photoRoutes from './src/routes/photoRoutes'
+import { resolve } from 'path'
 require('dotenv').config()
 
 class App {
@@ -18,6 +19,7 @@ class App {
   middlewares () {
     this.app.use(express.urlencoded({ extended: true }))
     this.app.use(express.json())
+    this.app.use(express.static(resolve(__dirname, 'uploads')))
   }
 
   routes () {
